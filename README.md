@@ -64,8 +64,8 @@ La source primaire des données provient de la publication de référence :
 1. Cloner le dépôt localement :
 
 ```bash
-git clone https://github.com/votre-utilisateur/votre-repo.git
-cd votre-repo
+git clone https://github.com/richUlric/Stage_Recherche_Prediction_Feu_foret.git
+cd Stage_Recherche_Prediction_Feu_foret
 ```
 
 2. Créer et activer un environnement virtuel :
