@@ -1,0 +1,910 @@
+\documentclass[aspectratio=169,11pt]{beamer}
+
+\usetheme{Madrid}
+\usecolortheme{crane}
+\setbeamertemplate{navigation symbols}{}
+
+\definecolor{darkred}{RGB}{139,0,0}
+\definecolor{brightred}{RGB}{220,20,60}
+\setbeamercolor{title}{fg=white,bg=darkred}
+\setbeamercolor{frametitle}{fg=white,bg=darkred}
+\setbeamercolor{section in head/foot}{bg=brightred,fg=white}
+\setbeamercolor{alerted text}{fg=darkred}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[french]{babel}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{hyperref}
+
+\title{Methodologie detaillee de reconstruction paleofeu}
+\subtitle{CharAnalysis, lissage, agregations regionales et bootstrap}
+\author{Projet Foret Boreale}
+\institute{Synthese technique basee sur l'article principal et ses references methodologiques}
+\date{\today}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}{Plan}
+  \tableofcontents
+\end{frame}
+
+\section{1. Objectif et donnees}
+
+\begin{frame}{Question methodologique}
+\textbf{Objectif:} reconstruire la dynamique du feu sur 12 000 ans a partir d'archives lacustres.
+
+\vspace{0.3cm}
+\textbf{Trois sorties cibles:}
+\begin{itemize}
+  \item \alert{RegBB}: biomasse brulee regionale.
+  \item \alert{RegFRI}: intervalle de retour regional du feu.
+  \item \alert{RegFS}: indice regional de taille/severite.
+\end{itemize}
+
+\textbf{Principe general:}
+\begin{enumerate}
+  \item Transformer le signal charbon en series temporelles comparables.
+  \item Extraire les evenements (pics) et la frequence des feux.
+  \item Agreger 6 lacs en un signal regional robuste.
+  \item Quantifier l'incertitude par bootstrap (IC 90\%).
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Jeu de donnees paleofeu (entree)}
+\textbf{Sites:} 6 lacs (M14, M15, O6, O14, O15, O16).
+
+\textbf{Materiel sedimentaire:}
+\begin{itemize}
+  \item carottes Livingstone (long terme),
+  \item carottes Kajak-Brinkhurst (surface recente).
+\end{itemize}
+
+\textbf{Echelle de travail:}
+\begin{itemize}
+  \item sous-echantillon sedimentaire: 1 cm$^3$ par tranche de 1 cm,
+  \item resolution temporelle finale: variable selon les modeles age-profondeur,
+  \item fenetre d'analyse regionale: 0--12 000 cal. yr BP.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Chronologie age-profondeur (fondement du calcul)}
+\textbf{Recent:} datation \(^{210}\)Pb (modele CRS).
+
+\textbf{Ancien:} datations \(^{14}\)C (AMS) sur macro-restes terrestres et/ou gyttja.
+
+\textbf{Modelisation:}
+\begin{itemize}
+  \item calibration IntCal20,
+  \item modele bayesien (type rbacon),
+  \item interpolation des ages a 1 cm,
+  \item CI autour des ages calibres.
+\end{itemize}
+
+\textbf{Pourquoi c'est critique:}
+\begin{itemize}
+  \item toute erreur de chronologie se propage dans CHAR,
+  \item elle affecte directement detection des pics, FF, FRI et RegFS.
+\end{itemize}
+\end{frame}
+
+\section{2. Extraction charbon et CHAR}
+
+\begin{frame}{Extraction des macro-charbons}
+\textbf{Pipeline laboratoire:}
+\begin{enumerate}
+  \item prelever 1 cm$^3$ de sediment,
+  \item disperser avec solution NaPO\(_3\) a 3\%,
+  \item tamiser a \alert{160 \(\mu\)m},
+  \item imager les particules (grossissement 20x),
+  \item mesurer nombre et aire des fragments.
+\end{enumerate}
+
+\textbf{Choix d'analyse:}
+\begin{itemize}
+  \item nombre et aire sont fortement correles,
+  \item l'etude retient principalement \alert{l'aire du charbon}.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Pourquoi le seuil 160 \(\mu\)m?}
+\begin{itemize}
+  \item Les fragments >160 \(\mu\)m sont associes a des sources de feu locales/subregionales.
+  \item L'ordre de grandeur spatial est generalement \alert{1 a 30 km} autour du lac.
+  \item Ce choix favorise la reconstruction des regimes de feu du paysage proche,
+        plutot qu'un signal hemispherique diffus.
+\end{itemize}
+
+\vspace{0.2cm}
+\textbf{Consequence:}
+\begin{itemize}
+  \item meilleure sensibilite aux evenements locaux,
+  \item mais dependance plus forte a l'heterogeneite entre lacs.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Fusion des carottes et serie continue par lac}
+\textbf{Probleme:} deux types de carottes couvrent des portions temporelles differentes.
+
+\textbf{Procedure:}
+\begin{itemize}
+  \item comparer motifs de nombre/aire dans les zones de recouvrement,
+  \item aligner les segments,
+  \item conserver prioritairement la partie recente KB (mieux contrainte en \(^{210}\)Pb),
+  \item retirer les duplications Livingstone dans la zone de recouvrement.
+\end{itemize}
+
+\textbf{Sortie:} une serie charbon unique continue pour chaque lac.
+\end{frame}
+
+\begin{frame}{Conversion en CHAR}
+\textbf{Entree brute:} concentration/aire charbon volumique
+\[
+C(t) \; [\mathrm{mm}^2\,\mathrm{cm}^{-3}]
+\]
+
+\textbf{Sortie standardisee:}
+\[
+CHAR(t) \; [\mathrm{mm}^2\,\mathrm{cm}^{-2}\,\mathrm{an}^{-1}]
+\]
+
+\textbf{Principe:}
+\begin{itemize}
+  \item conversion via la vitesse d'accumulation sedimentaire issue du modele age-profondeur,
+  \item interpolation sur une grille temporelle harmonisee (resolution mediane).
+\end{itemize}
+
+\textbf{Interpretation:}
+\begin{itemize}
+  \item CHAR eleve = flux de charbon eleve,
+  \item proxy de biomasse brulee locale plus importante.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Pourquoi la vitesse de sedimentation compte?}
+\textbf{Idee cle:} la conversion en CHAR depend directement de la chronologie et du taux d'accumulation sedimentaire.
+
+\vspace{0.2cm}
+\begin{itemize}
+  \item Si les sediments s'accumulent vite, une meme quantite de charbon correspond a un flux annuel different.
+  \item Si les sediments s'accumulent lentement, le meme volume couvre plus de temps.
+  \item Le modele age-profondeur fournit la relation profondeur-temps qui permet cette conversion.
+\end{itemize}
+
+\vspace{0.2cm}
+\textbf{Traduction simple:}
+\begin{itemize}
+  \item le charbon n'est pas seulement mesure par volume,
+  \item il est converti en flux temporel grace au contexte sedimentaire.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Exemple intuitif de conversion en CHAR}
+\textbf{Cas 1: sedimentation rapide}
+\begin{itemize}
+  \item 1 cm de sediment se depose en 20 ans.
+  \item Le charbon contenu dans cette tranche est rapporte a une duree courte.
+\end{itemize}
+
+\textbf{Cas 2: sedimentation lente}
+\begin{itemize}
+  \item 1 cm de sediment se depose en 100 ans.
+  \item La meme tranche couvre plus de temps, donc le flux annuel calcule change.
+\end{itemize}
+
+\vspace{0.2cm}
+\textbf{Conclusion:} deux echantillons ayant la meme aire de charbon peuvent donner des CHAR differents si leur vitesse de sedimentation differe.
+\end{frame}
+
+\section{3. CharAnalysis en detail}
+
+\begin{frame}{Role de CharAnalysis}
+\textbf{But:} separer, dans CHAR, le signal de fond (tendance lente) du signal d'evenements (pics).
+
+\vspace{0.2cm}
+\textbf{Sorties principales:}
+\begin{itemize}
+  \item dates d'evenements feu (pics),
+  \item serie de biomasse brulee,
+  \item base pour calcul de FF, FRI et RegFS.
+\end{itemize}
+
+\textbf{Logiciel mentionne:} CharAnalysis v1.1.
+\end{frame}
+
+\begin{frame}{Lecture intuitive: fond vs pics}
+\textbf{Signal de fond (background):}
+\begin{itemize}
+  \item representer la dynamique lente du systeme,
+  \item suivre les tendances multi-centennales,
+  \item ne pas etre interprete comme une succession d'evenements individuels.
+\end{itemize}
+
+\textbf{Signal de pics (peak component):}
+\begin{itemize}
+  \item representer les deviations rapides au-dessus du fond,
+  \item candidate a l'interpretation "evenement de feu".
+\end{itemize}
+
+\textbf{Message cle:} CharAnalysis ne detecte pas les feux sur CHAR brut, mais sur le residuel apres retrait du fond.
+\end{frame}
+
+\begin{frame}{Etape A -- Interpolation temporelle}
+\textbf{Pourquoi:} les intervalles entre echantillons ne sont pas constants.
+
+\textbf{Action:}
+\begin{itemize}
+  \item interpoler CHAR sur une grille temporelle reguliere,
+  \item utiliser une resolution proche de la resolution mediane du site.
+\end{itemize}
+
+\textbf{Point de vigilance:}
+\begin{itemize}
+  \item une interpolation trop fine amplifie le bruit,
+  \item trop grossiere masque les pics et sous-estime les evenements.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Etape B -- Estimation du bruit de fond}
+\textbf{Concept:}
+\[
+CHAR_{interp}(t) = CHAR_{background}(t) + CHAR_{peak}(t)
+\]
+
+\textbf{Background:}
+\begin{itemize}
+  \item composante basse frequence (variations lentes),
+  \item obtenue par lissage fenetre/mobile robuste (selon parametrage CharAnalysis).
+\end{itemize}
+
+\textbf{Peak component:}
+\[
+CHAR_{peak}(t) = CHAR_{interp}(t) - CHAR_{background}(t)
+\]
+\end{frame}
+
+\begin{frame}{Etape C -- Detection de pics}
+\textbf{Principe:}
+\begin{itemize}
+  \item estimer la distribution du bruit residuel,
+  \item definir un seuil statistique,
+  \item detecter comme \alert{evenement} les maxima depassant ce seuil.
+\end{itemize}
+
+\textbf{Resultat:}
+\begin{itemize}
+  \item suite de dates de feu pour chaque lac,
+  \item base de calcul de la frequence des feux (FF).
+\end{itemize}
+
+\textbf{Bonnes pratiques:}
+\begin{itemize}
+  \item tester la sensibilite aux parametres,
+  \item comparer avec references dendro/archives historiques si disponibles,
+  \item documenter explicitement seuils et fenetres choisis.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Que veut dire \textit{pic significatif}?}
+\textbf{Definition operationnelle:}
+\begin{itemize}
+  \item un pic est dit significatif s'il depasse un seuil estime a partir du bruit residuel,
+  \item il est alors classe comme evenement plausible plutot que fluctuation aleatoire.
+\end{itemize}
+
+\textbf{Implication pratique:}
+\begin{itemize}
+  \item seuil trop bas \(\Rightarrow\) faux positifs (trop d'evenements),
+  \item seuil trop haut \(\Rightarrow\) faux negatifs (evenements manques).
+\end{itemize}
+
+\textbf{Bonne pratique:} justifier le parametrage et faire une analyse de sensibilite.
+\end{frame}
+
+\begin{frame}{Comment choisir le seuil statistique?}
+\textbf{Principe:} compromis entre faux positifs et faux negatifs.
+
+\textbf{Procedure pratique (CharAnalysis):}
+\begin{enumerate}
+  \item Estimer la distribution du bruit residuel de \(CHAR_{peak}\),
+  \item definir un seuil sur cette distribution (souvent percentile eleve),
+  \item tester la sensibilite sur plusieurs seuils.
+\end{enumerate}
+
+\textbf{Regle de travail:}
+\begin{itemize}
+  \item commencer conservateur (ex. percentile 99\%),
+  \item comparer avec 97.5\% et 95\%,
+  \item retenir le seuil qui stabilise FF sans sur-detection.
+\end{itemize}
+
+\textbf{A reporter dans la methode:} seuil final, variantes testees, impact sur le nombre de pics et la FF regionale.
+\end{frame}
+
+\begin{frame}{Sortie CharAnalysis -> entree de FF}
+\textbf{Sortie directe de CharAnalysis:}
+\begin{itemize}
+  \item liste datee des pics par lac,
+  \item intensite relative des pics.
+\end{itemize}
+
+\textbf{Transition methodologique:}
+\begin{itemize}
+  \item ces dates de pics sont transformees en frequence de feu,
+  \item via une estimation de densite a noyau (bande passante 500 ans).
+\end{itemize}
+
+\textbf{Transition orale (a dire):} \alert{"Les dates de pics permettent maintenant de calculer la frequence des feux."}
+\end{frame}
+
+\begin{frame}[fragile]{Pseudo-code conceptuel CharAnalysis}
+\footnotesize
+\begin{verbatim}
+Input: charcoal_area_by_depth, age_depth_model
+1) Convert depth -> age
+2) Compute CHAR(age)
+3) Interpolate CHAR on regular time grid
+4) Smooth CHAR to estimate background component
+5) Residual = CHAR_interp - CHAR_background
+6) Fit noise model on residual component
+7) Detect peaks above threshold
+Output: fire-event dates, CHAR background, peak series
+\end{verbatim}
+
+\normalsize
+\textbf{Important:} le detail exact des parametres (fenetres, seuil) doit etre reporte dans l'annexe methodologique du projet.
+\end{frame}
+
+\section{4. Frequence, FRI, taille/severite}
+
+\begin{frame}{Frequence des feux (FF): entree et objectif}
+\textbf{Entree:} dates de pics detectees par CharAnalysis pour chaque lac.
+
+\textbf{Pourquoi ne pas juste compter par fenetre fixe?}
+\begin{itemize}
+  \item le comptage par classes peut etre instable aux bords de fenetre,
+  \item la densite a noyau fournit une estimation continue de la frequence,
+  \item elle exploite l'information temporelle de chaque evenement.
+\end{itemize}
+
+\textbf{Sortie:}
+\[
+FF(t)\; [\mathrm{feux}\,\mathrm{an}^{-1}]
+\]
+\end{frame}
+
+\begin{frame}{Estimation de FF par densite a noyau (h = 500 ans)}
+\textbf{Forme generale:}
+\[
+FF(t) = \frac{1}{h}\sum_i K\!\left(\frac{t-t_i}{h}\right),\qquad h=500\ \text{ans}
+\]
+\begin{itemize}
+  \item \(t_i\): dates des pics,
+  \item \(K\): noyau de lissage,
+  \item \(h\): bande passante qui controle l'echelle de lissage.
+\end{itemize}
+
+\textbf{Effet de \(h=500\):}
+\begin{itemize}
+  \item attenue le bruit haute frequence,
+  \item conserve les tendances centennales a millenaires,
+  \item rend les courbes comparables entre lacs.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Bande passante: modifiable ou non?}
+\textbf{A quoi correspond \(h\)?}
+\begin{itemize}
+  \item \(h\) est la largeur de lissage temporel de la densite a noyau,
+  \item petit \(h\): plus de detail mais plus de bruit,
+  \item grand \(h\): courbe plus stable mais perte des variations rapides.
+\end{itemize}
+
+\textbf{Est-ce modifiable?} Oui, c'est un choix methodologique.
+
+\textbf{Comment modifier?}
+\begin{itemize}
+  \item recalculer FF avec plusieurs valeurs (ex. 300, 500, 700 ans),
+  \item comparer la stabilite des tendances regionales,
+  \item retenir la valeur qui limite le bruit sans effacer le signal utile.
+\end{itemize}
+
+\textbf{Pourquoi ne pas modifier en cours d'analyse?}
+\begin{itemize}
+  \item pour garder la comparabilite entre periodes et entre sites,
+  \item pour eviter un reglage opportuniste des resultats,
+  \item pour conserver une methode reproductible et defendable.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Comment lire FF?}
+\textbf{Interpretation directe:}
+\begin{itemize}
+  \item FF eleve \(\Rightarrow\) feux plus frequents (intervalle moyen plus court),
+  \item FF faible \(\Rightarrow\) feux plus espaces (intervalle moyen plus long).
+\end{itemize}
+
+\textbf{Exemple numerique:}
+\begin{itemize}
+  \item si \(FF=0.01\) feu/an, on attend en moyenne 1 feu tous les 100 ans,
+  \item si \(FF=0.004\) feu/an, on attend en moyenne 1 feu tous les 250 ans.
+\end{itemize}
+
+\textbf{Transition:} une fois FF estime, on deduit l'intervalle de retour \(FRI=1/FF\).
+\end{frame}
+
+\begin{frame}{De FF a FRI}
+\textbf{Definition:}
+\[
+FRI(t) = \frac{1}{FF(t)}
+\]
+
+\textbf{Unites:}
+\begin{itemize}
+  \item FF en feux/an,
+  \item FRI en annees entre feux.
+\end{itemize}
+
+\textbf{Lecture:}
+\begin{itemize}
+  \item FF fort \(\Rightarrow\) FRI court (feux rapproches),
+  \item FF faible \(\Rightarrow\) FRI long (feux espaces).
+\end{itemize}
+
+\textbf{Regional:}
+\[
+RegFRI(t) = \frac{1}{RegFF(t)}
+\]
+\end{frame}
+
+\begin{frame}{Biomasse brulee regionale (RegBB)}
+\textbf{Construction:}
+\begin{itemize}
+  \item convertir chaque serie lacustre en proxy BB,
+  \item harmoniser l'echelle temporelle,
+  \item agreger les 6 series en signal regional.
+\end{itemize}
+
+\textbf{Interpretation:}
+\begin{itemize}
+  \item RegBB eleve: combustion regionale soutenue,
+  \item RegBB bas: combustion regionale reduite.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Indice taille/severite (RegFS)}
+\textbf{Definition dans l'etude:}
+\[
+RegFS(t) = \frac{RegBB(t)}{RegFF(t)}
+\]
+
+\textbf{Intuition:}
+\begin{itemize}
+  \item c'est une quantite moyenne de biomasse brulee par evenement,
+  \item elle combine information de combustion totale et nombre d'evenements.
+\end{itemize}
+
+\textbf{Lecture:}
+\begin{itemize}
+  \item RegFS haut: feux moyens plus grands et/ou plus severes,
+  \item RegFS bas: feux moyens plus petits et/ou moins severes.
+\end{itemize}
+\end{frame}
+
+\section{5. Aggregation regionale et bootstrap}
+
+\begin{frame}{Aggregation multi-sites}
+\textbf{Pourquoi agreger 6 lacs?}
+\begin{itemize}
+  \item reduire l'effet des idiosyncrasies locales,
+  \item extraire un signal de regime regional,
+  \item tester la coherence inter-sites.
+\end{itemize}
+
+\textbf{Strategie:}
+\begin{enumerate}
+  \item calculer les metriques site par site,
+  \item aligner sur la meme grille temporelle,
+  \item combiner en moyenne regionale (RegBB, RegFF, RegFS),
+  \item derivation de RegFRI.
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Bootstrap: principe}
+\textbf{Objectif:} propager l'incertitude inter-sites vers les indicateurs regionaux.
+
+\textbf{Configuration de l'etude:}
+\begin{itemize}
+  \item resampling des sites avec remise,
+  \item \alert{999 iterations},
+  \item construction d'intervalle de confiance bootstrap \alert{90\%}.
+\end{itemize}
+
+\textbf{Notation:} BCI 90\% (Bootstrap Confidence Interval).
+\end{frame}
+
+\begin{frame}{Bootstrap: explication intuitive}
+\textbf{Idee simple:}
+\begin{itemize}
+  \item on veut savoir si le signal regional change quand la composition des lacs change,
+  \item le bootstrap simule cette variabilite en reconstruisant le regional plusieurs fois,
+  \item chaque reconstruction tire \textit{6 lacs avec remise} parmi les 6 lacs disponibles.
+\end{itemize}
+
+\textbf{Avec remise, cela veut dire:}
+\begin{itemize}
+  \item un lac peut apparaitre plusieurs fois dans un tirage,
+  \item un autre lac peut ne pas apparaitre dans ce tirage,
+  \item cela imite l'incertitude d'echantillonnage inter-sites.
+\end{itemize}
+
+\textbf{Resultat:} on obtient non pas une seule courbe, mais une distribution de courbes possibles.
+\end{frame}
+
+\begin{frame}[fragile]{Bootstrap: pseudo-code}
+\footnotesize
+\begin{verbatim}
+for b in 1..999:
+    sample_lakes <- resample_with_replacement(6 lakes)
+    compute RegBB_b(t), RegFF_b(t), RegFS_b(t)
+    compute RegFRI_b(t) = 1 / RegFF_b(t)
+end
+
+for each time t:
+    CI90_low(t)  = quantile(metric_b(t), 0.05)
+    CI90_high(t) = quantile(metric_b(t), 0.95)
+\end{verbatim}
+
+\normalsize
+\textbf{Regle de comparaison de periodes:}
+\begin{itemize}
+  \item difference consideree significative si les BCI 90\% ne se recouvrent pas.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Comment lire un BCI 90\%?}
+\textbf{A un temps \(t\), pour une metrique donnee:}
+\begin{itemize}
+  \item borne basse = quantile 5\%,
+  \item borne haute = quantile 95\%,
+  \item intervalle \([q_{0.05}, q_{0.95}]\) = plage plausible de la metrique.
+\end{itemize}
+
+\textbf{Interpretation pratique:}
+\begin{itemize}
+  \item intervalle large \(\Rightarrow\) forte incertitude inter-sites,
+  \item intervalle etroit \(\Rightarrow\) bonne stabilite du signal regional.
+\end{itemize}
+
+\textbf{Comparaison de periodes:}
+\begin{itemize}
+  \item si les BCI 90\% se recouvrent fortement, difference prudente,
+  \item s'ils ne se recouvrent pas, difference plus robuste.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Que mettre dans la section lissage + bootstrap?}
+\textbf{Lissage (obligatoire a rapporter):}
+\begin{itemize}
+  \item variable lissee (FF),
+  \item methode (noyau),
+  \item bande passante (500 ans),
+  \item grille temporelle,
+  \item traitement des bords.
+\end{itemize}
+
+\textbf{Bootstrap (obligatoire a rapporter):}
+\begin{itemize}
+  \item unite de resampling (site/lac),
+  \item nombre d'iterations (999),
+  \item niveau de confiance (90\%),
+  \item quantiles utilises (5\%--95\%),
+  \item critere de significativite (recouvrement des IC).
+\end{itemize}
+\end{frame}
+
+\section{6. Parametrage pratique et controles}
+
+\begin{frame}{Parametres cles a figer avant analyse}
+\textbf{Bloc Chronologie:}
+\begin{itemize}
+  \item choix des dates retenues/exclues,
+  \item prior/model age-profondeur,
+  \item resolution temporelle d'interpolation.
+\end{itemize}
+
+\textbf{Bloc CharAnalysis:}
+\begin{itemize}
+  \item largeur de fenetre background,
+  \item regle de seuil de pic,
+  \item criteres de filtrage des faux pics.
+\end{itemize}
+
+\textbf{Bloc FF/FRI:}
+\begin{itemize}
+  \item noyau utilise,
+  \item bande passante 500 ans,
+  \item pas temporel des sorties.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Controles qualite recommandes}
+\begin{enumerate}
+  \item \textbf{QC laboratoire}: replicats de comptage/aire de charbon.
+  \item \textbf{QC chronologie}: verifier inversions/ruptures improbables age-profondeur.
+  \item \textbf{QC pics}: test sensibilite aux parametres CharAnalysis.
+  \item \textbf{QC regional}: leave-one-lake-out pour voir la dependance a un site.
+  \item \textbf{QC incertitude}: stabilite des IC en augmentant le nombre d'iterations.
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Erreurs frequentes a eviter}
+\begin{itemize}
+  \item Confondre \textit{flux de charbon} et \textit{nombre d'evenements}.
+  \item Appliquer un lissage trop agressif et perdre les transitions rapides.
+  \item Comparer des periodes sans verifier la taille de l'incertitude.
+  \item Interpretrer RegFS comme une mesure directe de severite absolue.
+  \item Oublier l'effet de la chronologie sur toutes les metriques derivees.
+\end{itemize}
+\end{frame}
+
+\section{7. Reproductibilite}
+
+\begin{frame}{Traite de reproductibilite (a inclure dans le rapport)}
+\textbf{Checklist minimale:}
+\begin{itemize}
+  \item version des donnees (CSV/ZIP),
+  \item version des outils (CharAnalysis, R/Python packages),
+  \item scripts d'execution dans l'ordre exact,
+  \item parametres numeriques fixes,
+  \item sortie des tables intermediaires (CHAR, pics, FF, Reg*),
+  \item archive des figures finales et metadonnees.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Schema de flux complet}
+\small
+\textbf{Entrees}\
+carottes sedimentaires + datations \(^{210}\)Pb/\(^{14}\)C
+
+\vspace{0.15cm}
+\textbf{Traitements}\
+extraction >160 \(\mu\)m \(\rightarrow\) aire charbon \(\rightarrow\) CHAR \(\rightarrow\) CharAnalysis (pics) \\
+\(\rightarrow\) FF (noyau 500 ans) \(\rightarrow\) agregation 6 lacs \(\rightarrow\) RegBB, RegFF, RegFS, RegFRI \\
+\(\rightarrow\) bootstrap 999 (BCI 90\%)
+
+\vspace{0.15cm}
+\textbf{Sorties}\
+courbes regionales + IC 90\% + comparaisons par periode
+\end{frame}
+
+\begin{frame}{References methodologiques a citer}
+\footnotesize
+\begin{itemize}
+  \item Girardin et al. (2024), Communications Earth \& Environment, Methods section.
+  \item Higuera et al. (2010), Peak detection in sediment-charcoal records.
+  \item Brossier et al. (2014), calibration des pics avec tree-rings.
+  \item Ali et al. (2009), area vs number vs volume in charcoal records.
+  \item Higuera (2009), CharAnalysis v1.1.
+\end{itemize}
+
+\vspace{0.2cm}
+\normalsize
+\textbf{Message final:} la robustesse de l'interpretation depend autant du protocole CharAnalysis + bootstrap que de la qualite des chronologies age-profondeur.
+\end{frame}
+
+\section{8. Annexe - Notations scientifiques}
+
+\begin{frame}{Pourquoi ces notations?}
+\begin{itemize}
+  \item Les articles paleo-environnementaux utilisent des notations compactes.
+  \item Elles melangent isotopes, unites, statistiques et transformations.
+  \item Cette annexe donne une traduction simple: \textit{notation -> sens -> exemple}.
+\end{itemize}
+
+\vspace{0.2cm}
+\textbf{Objectif:} que chaque symbole vu dans la methode soit interpretable sans ambiguite.
+\end{frame}
+
+\begin{frame}{Isotopes et datations: \(^{210}\)Pb, \(^{14}\)C, AMS}
+\textbf{\(^{210}\)Pb (plomb-210):}
+\begin{itemize}
+  \item isotope radioactif utilise pour dater les sediments recents (dernieres centuries),
+  \item utile pour caler le sommet des carottes.
+\end{itemize}
+
+\textbf{\(^{14}\)C (carbone-14):}
+\begin{itemize}
+  \item isotope radioactif utilise pour dater les materiaux plus anciens,
+  \item applique a des macro-restes (bois, feuilles, graines, etc.).
+\end{itemize}
+
+\textbf{AMS (Accelerator Mass Spectrometry):}
+\begin{itemize}
+  \item methode de mesure tres sensible du \(^{14}\)C,
+  \item permet de dater de petites quantites de matiere.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Notations de temps: BP, cal. yr BP, CE 1950}
+\textbf{BP = Before Present:}
+\begin{itemize}
+  \item "Present" est fixe conventionnellement a l'annee \alert{1950 CE}.
+\end{itemize}
+
+\textbf{cal. yr BP = calibrated years before present:}
+\begin{itemize}
+  \item age calibre en annees avant 1950,
+  \item "calibre" signifie corrige via courbe de calibration (ex. IntCal20).
+\end{itemize}
+
+\textbf{Exemples:}
+\begin{itemize}
+  \item 0 cal. yr BP = 1950 CE,
+  \item 1000 cal. yr BP \(\approx\) 950 CE,
+  \item 12000 cal. yr BP \(\approx\) 10050 BCE.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{IntCal20: definition courte}
+\textbf{IntCal20 = courbe de calibration radiocarbone (version 2020).}
+
+\vspace{0.2cm}
+\textbf{A quoi elle sert?}
+\begin{itemize}
+  \item Une date \(^{14}\)C brute n'est pas directement une date calendrier.
+  \item Le \(^{14}\)C atmospherique a varie dans le temps.
+  \item IntCal20 corrige cette variabilite pour passer de \(^{14}\)C age BP a cal. yr BP.
+\end{itemize}
+
+\textbf{Message cle:}
+\begin{itemize}
+  \item sans calibration, les ages peuvent etre biaises,
+  \item avec calibration, on obtient une plage d'ages calendrier probable.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{IntCal20 en 4 etapes (pratique)}
+\begin{enumerate}
+  \item Le labo fournit une date radiocarbone: \(x \pm \sigma\) \(^{14}\)C BP.
+  \item On utilise IntCal20 pour convertir cet age en age calendrier.
+  \item On obtient une distribution de probabilite (pas une valeur unique).
+  \item On resume cette distribution par des intervalles (ex. 68\%, 95\%) en cal. yr BP.
+\end{enumerate}
+
+\vspace{0.2cm}
+\textbf{Formulation simple:}
+\[
+\text{age calendrier} = f\big(\text{age }^{14}\text{C},\, \text{IntCal20}\big)
+\]
+\end{frame}
+
+\begin{frame}{Exemple numerique (pedagogique)}
+\textbf{Exemple fictif (ordre de grandeur):}
+\begin{itemize}
+  \item date labo: \(5000 \pm 40\) \(^{14}\)C BP,
+  \item apres calibration IntCal20: distribution centree autour de ~5.7--5.9 ka cal BP.
+\end{itemize}
+
+\textbf{Important:}
+\begin{itemize}
+  \item ce n'est pas une simple addition/soustraction,
+  \item la conversion depend de la forme de la courbe IntCal20,
+  \item un meme age \(^{14}\)C peut donner une distribution asymetrique ou multimodale.
+\end{itemize}
+
+\textbf{Dans ce projet:}
+\begin{itemize}
+  \item les dates calibrees (cal. yr BP) alimentent le modele age-profondeur,
+  \item puis tout le reste (CHAR, pics, FF, FRI, RegFS) en depend.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Unites charbon: \(\mu\)m, mm\(^2\) cm\(^{-3}\), CHAR}
+\textbf{\(\mu\)m (micrometre):}
+\begin{itemize}
+  \item 1 \(\mu\)m = 10\(^{-6}\) m,
+  \item seuil >160 \(\mu\)m = fragments macroscopiques retenus.
+\end{itemize}
+
+\textbf{mm\(^2\) cm\(^{-3}\):}
+\begin{itemize}
+  \item aire de charbon mesuree par volume de sediment,
+  \item variable "brute" avant conversion temporelle.
+\end{itemize}
+
+\textbf{CHAR en mm\(^2\) cm\(^{-2}\) an\(^{-1}\):}
+\begin{itemize}
+  \item flux de charbon par surface et par an,
+  \item comparable dans le temps et entre lacs.
+\end{itemize}
+
+\textbf{Exemple:} CHAR = 0.02 mm\(^2\) cm\(^{-2}\) an\(^{-1}\)
+\begin{itemize}
+  \item signifie qu'en moyenne, 0.02 mm\(^2\) de charbon se depose chaque annee sur 1 cm\(^2\).
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Notations de metriques feu: FF, FRI, RegBB, RegFS}
+\textbf{FF (fire frequency):}
+\begin{itemize}
+  \item frequence des evenements feu (feux/an),
+  \item estimee apres detection de pics + lissage noyau.
+\end{itemize}
+
+\textbf{FRI (fire return interval):}
+\[
+FRI = \frac{1}{FF}
+\]
+
+\textbf{Exemple:}
+\begin{itemize}
+  \item si FF = 0.005 feux/an, alors FRI = 200 ans.
+\end{itemize}
+
+\textbf{RegBB, RegFF, RegFS, RegFRI:}
+\begin{itemize}
+  \item prefixe "Reg" = moyenne/indice regional (agregation multi-sites),
+  \item RegFS = RegBB / RegFF (proxy taille-severite moyenne par evenement).
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Notations statistiques: CI, BCI, 90\%, 999 iterations}
+\textbf{CI (Confidence Interval):}
+\begin{itemize}
+  \item intervalle d'incertitude autour d'une estimation.
+\end{itemize}
+
+\textbf{BCI (Bootstrap Confidence Interval):}
+\begin{itemize}
+  \item CI calcule par re-echantillonnage bootstrap.
+\end{itemize}
+
+\textbf{IC 90\%:}
+\begin{itemize}
+  \item contient 90\% des valeurs bootstrap (souvent quantiles 5\% et 95\%).
+\end{itemize}
+
+\textbf{999 iterations:}
+\begin{itemize}
+  \item 999 re-echantillonnages des lacs pour estimer la variabilite regionnale.
+\end{itemize}
+
+\textbf{Exemple rapide:}
+\begin{itemize}
+  \item RegFRI median = 210 ans,
+  \item BCI 90\% = [180 ; 245] ans.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Mini glossaire (resume en 60 secondes)}
+\small
+\begin{tabular}{ll}
+\toprule
+\textbf{Notation} & \textbf{Definition courte} \\
+\midrule
+\(^{210}\)Pb & datation sediments recents \\
+\(^{14}\)C & datation plus ancienne \\
+cal. yr BP & annees calibrees avant 1950 \\
+CHAR & flux de charbon (surface \& temps) \\
+FF & frequence de feux \\
+FRI & intervalle moyen entre feux (1/FF) \\
+RegBB & biomasse brulee regionale \\
+RegFS & indice taille/severite regional \\
+CI / BCI 90\% & incertitude (intervalle 90\%) \\
+\bottomrule
+\end{tabular}
+\end{frame}
+
+\begin{frame}
+\centering
+\Huge Merci
+\end{frame}
+
+\end{document}
