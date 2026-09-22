@@ -1,3 +1,4 @@
+
 # 🌲 Prédiction des Régimes de Perturbations en Forêt Boréale par Apprentissage Automatique
 
 > **Projet de Recherche & Modélisation Hybride (IA & Systèmes Dynamiques)**
@@ -24,7 +25,19 @@ Ce projet s'inscrit dans le cadre d'une étude sur la dynamique long terme des f
 .
 ├── figures_feu/                # Graphiques descriptifs du signal régional et des occurrences lacustres
 ├── figures_notebook_outputs/    # Graphiques de sorties expérimentales (prédictions vs obs, résidus, dérives)
-├── model_weights/              # Poids exportés des réseaux de neurones PyTorch (.pt / .pth)
+├── model_weights/              # Poids exportés et pipelines sérialisés
+│   ├── frequency/              # Modèles entraînés sur la fréquence du feu (RegFRI / FF)
+│   │   ├── proxy_frequency_NBeats.pth
+│   │   ├── proxy_frequency_TransformerPatch.pth
+│   │   ├── proxy_frequency_LSTMPatch.pth
+│   │   ├── proxy_frequency_TemporalFusionTransformer.pth
+│   │   ├── proxy_frequency_RandomForest.joblib
+│   │   └── ...
+│   └── intensity/              # Modèles entraînés sur l'intensité du feu (RegFS / FS)
+│       ├── proxy_intensity_TransformerPatch.pth
+│       ├── proxy_intensity_NBeats.pth
+│       ├── proxy_intensity_RandomForest.joblib
+│       └── ...
 │
 ├── Analyse_exploratoire_donnees.ipynb        # Exploration descriptive & analyse spatio-temporelle des proxys
 ├── exploration_variables_modeles_feu.ipynb   # Pipeline d'entraînement, validation séquentielle & benchmark DL
@@ -33,6 +46,51 @@ Ce projet s'inscrit dans le cadre d'une étude sur la dynamique long terme des f
 ├── *.csv                       # Tables de données de travail (séries temporelles régionales et lacustres)
 ├── requirements.txt            # Liste des dépendances Python
 └── README.md                   # Documentation du projet
+```
+
+---
+
+## 💾 Utilisation des Modèles Entraînés (`model_weights/`)
+
+Les poids et pipelines pré-entraînés sont sauvegardés dans le dossier `model_weights/` afin d'effectuer des inférences directes sans réentraîner les réseaux.
+
+### 1. Charger un modèle classique (Scikit-Learn / `.joblib`)
+
+Les modèles classiques intègrent directement leur pipeline de prétraitement :
+
+```python
+import joblib
+
+# Chargement du RandomForest entraîné sur la fréquence
+rf_model = joblib.load('model_weights/frequency/proxy_frequency_RandomForest.joblib')
+
+# Prédiction
+predictions = rf_model.predict(X_test)
+
+```
+
+### 2. Charger un modèle séquentiel (PyTorch / `.pth`)
+
+Pour charger les réseaux de neurones profonds, instanciez l'architecture correspondante avec sa configuration avant d'injecter les poids :
+
+```python
+import torch
+from your_module import NBeatsNet  # Remplacer par la classe de votre modèle
+
+# 1. Instanciation de l'architecture avec la configuration adéquate
+model = NBeatsNet(input_dim=24, horizon=6)
+
+# 2. Chargement des poids enregistrés
+weights_path = 'model_weights/frequency/proxy_frequency_NBeats.pth'
+model.load_state_dict(torch.load(weights_path, map_location=torch.device('cpu')))
+
+# 3. Passage en mode évaluation
+model.eval()
+
+# 4. Inférence sur un tenseur d'entrée (batch_size, seq_len)
+with torch.no_grad():
+    predictions = model(input_tensor)
+
 ```
 
 ---
@@ -48,7 +106,7 @@ Les données utilisées combinent des enregistrements de micro-charbons et de po
 
 La source primaire des données provient de la publication de référence :
 
-> Girardin, M. P., Gaboriau, D. M., Ali, A. A., Gajewski, K., Briere, M. D., Bergeron, Y., Paillard, J., Waito, J., & Tardif, J. C. (2024). *Boreal forest cover was reduced in the mid-Holocene with warming and recurring wildfires*. **Communications Earth & Environment**, 5(1), 176. [https://doi.org/10.1038/s43247-024-01340-8](https://doi.org/10.1038/s43247-024-01340-8)
+> Girardin, M. P., Gaboriau, D. M., Ali, A. A., Gajewski, K., Briere, M. D., Bergeron, Y., Paillard, J., Waito, J., & Tardif, J. C. (2024). *Boreal forest cover was reduced in the mid-Holocene with warming and recurring wildfires*. **Communications Earth & Environment**, 5(1), 176. [https://doi.org/10.1038/s43247-024-01340-8](https://doi.org/10.1038/s43247-024-01340-8?utm_source=gemini)
 
 ---
 
@@ -64,8 +122,9 @@ La source primaire des données provient de la publication de référence :
 1. Cloner le dépôt localement :
 
 ```bash
-git clone https://github.com/richUlric/Stage_Recherche_Prediction_Feu_foret.git
+git clone [https://github.com/richUlric/Stage_Recherche_Prediction_Feu_foret.git](https://github.com/richUlric/Stage_Recherche_Prediction_Feu_foret.git)
 cd Stage_Recherche_Prediction_Feu_foret
+
 ```
 
 2. Créer et activer un environnement virtuel :
@@ -74,12 +133,6 @@ cd Stage_Recherche_Prediction_Feu_foret
 python -m venv venv
 source venv/bin/activate  # Sur Linux/macOS
 # venv\Scripts\activate   # Sur Windows
-```
-
-3. Installer les dépendances :
-
-```bash
-pip install -r requirements.txt
 ```
 
 ---
@@ -93,6 +146,7 @@ Pour reproduire l'ensemble des figures et des tableaux de performances présent�
 
 ```bash
 jupyter lab
+
 ```
 
 3. Exécuter les notebooks dans l'ordre préconisé :
@@ -109,3 +163,7 @@ Ce projet s'inscrit dans le cadre d'un stage de fin d'études mené en collabora
 
 * **Laboratoire :** Laboratoire des Sciences du Numérique de Nantes (LS2N - UMR CNRS 6004), Équipe VELO.
 * **Établissements :** Université de Nantes & École Centrale de Nantes.
+
+```
+
+```
